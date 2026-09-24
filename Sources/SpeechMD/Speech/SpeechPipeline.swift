@@ -125,8 +125,6 @@ actor SpeechPipeline {
     }
 
     func startMicrophone(onEvent: @escaping EventHandler) async throws {
-        let prepared = try await preparePipeline()
-        let analyzer = prepared.analyzer
         guard await AVCaptureDevice.requestAccess(for: .audio) else {
             throw SpeechPipelineError.noMicrophone
         }
@@ -140,35 +138,55 @@ actor SpeechPipeline {
         guard inputFormat.channelCount > 0 else {
             throw SpeechPipelineError.noMicrophone
         }
-        guard let analyzerFormat = await SpeechAnalyzer.bestAvailableAudioFormat(
-            compatibleWith: prepared.modules,
-            considering: inputFormat
-        ) else {
-            throw SpeechPipelineError.unavailable
-        }
 
+        // O microfone liga antes do modelo: o que for dito enquanto o analyzer
+        // prepara fica guardado na ponte e é entregue assim que ele estiver pronto.
         let (inputSequence, inputBuilder) = AsyncStream.makeStream(of: AnalyzerInput.self)
-        let bridge = try AudioInputBridge(
-            sourceFormat: inputFormat,
-            analyzerFormat: analyzerFormat,
-            continuation: inputBuilder
-        )
+        let bridge = AudioInputBridge(sourceFormat: inputFormat, continuation: inputBuilder)
         input.installTap(onBus: 0, bufferSize: 256, format: inputFormat) { buffer, _ in
             bridge.receive(buffer)
         }
-
-        self.analyzer = analyzer
         audioEngine = engine
         audioBridge = bridge
-        startConsumingResults(from: prepared, onEvent: onEvent)
-
-        try await analyzer.prepareToAnalyze(in: analyzerFormat)
-        try await analyzer.start(inputSequence: inputSequence)
         engine.prepare()
-        try engine.start()
+        do {
+            try engine.start()
+        } catch {
+            stopCapture()
+            throw error
+        }
         // SpeechAnalyzer time-codes begin with the audio stream, not when model
         // preparation starts. Anchor the wall clock only after capture is live.
         resetRunState()
+
+        do {
+            let prepared = try await preparePipeline()
+            let analyzer = prepared.analyzer
+            guard let analyzerFormat = await SpeechAnalyzer.bestAvailableAudioFormat(
+                compatibleWith: prepared.modules,
+                considering: inputFormat
+            ) else {
+                throw SpeechPipelineError.unavailable
+            }
+            try bridge.attach(analyzerFormat: analyzerFormat)
+
+            self.analyzer = analyzer
+            startConsumingResults(from: prepared, onEvent: onEvent)
+
+            try await analyzer.prepareToAnalyze(in: analyzerFormat)
+            try await analyzer.start(inputSequence: inputSequence)
+        } catch {
+            stopCapture()
+            throw error
+        }
+    }
+
+    private func stopCapture() {
+        audioEngine?.inputNode.removeTap(onBus: 0)
+        audioEngine?.stop()
+        audioBridge?.finish()
+        audioEngine = nil
+        audioBridge = nil
     }
 
     func startAudioStream(
@@ -185,11 +203,8 @@ actor SpeechPipeline {
         }
 
         let (inputSequence, inputBuilder) = AsyncStream.makeStream(of: AnalyzerInput.self)
-        let bridge = try AudioInputBridge(
-            sourceFormat: sourceFormat,
-            analyzerFormat: analyzerFormat,
-            continuation: inputBuilder
-        )
+        let bridge = AudioInputBridge(sourceFormat: sourceFormat, continuation: inputBuilder)
+        try bridge.attach(analyzerFormat: analyzerFormat)
 
         self.analyzer = analyzer
         audioBridge = bridge
@@ -481,29 +496,81 @@ private enum PreparedPipeline: Sendable {
     }
 }
 
+/// Converte o áudio do microfone para o formato do analyzer. Até `attach`, o
+/// formato ainda não é conhecido: os buffers ficam guardados e são convertidos,
+/// na ordem, no momento em que ele chega.
 private final class AudioInputBridge: @unchecked Sendable {
-    private let converter: AVAudioConverter
-    private let analyzerFormat: AVAudioFormat
+    /// Teto do que se guarda antes do analyzer ficar pronto.
+    private static let maxPendingSeconds: Double = 30
+
+    private let sourceFormat: AVAudioFormat
     private let continuation: AsyncStream<AnalyzerInput>.Continuation
     private let lock = NSLock()
+    private var converter: AVAudioConverter?
+    private var analyzerFormat: AVAudioFormat?
+    private var pending: [AVAudioPCMBuffer] = []
+    private var pendingFrames: AVAudioFramePosition = 0
 
     init(
         sourceFormat: AVAudioFormat,
-        analyzerFormat: AVAudioFormat,
         continuation: AsyncStream<AnalyzerInput>.Continuation
-    ) throws {
+    ) {
+        self.sourceFormat = sourceFormat
+        self.continuation = continuation
+    }
+
+    func attach(analyzerFormat: AVAudioFormat) throws {
         guard let converter = AVAudioConverter(from: sourceFormat, to: analyzerFormat) else {
             throw SpeechPipelineError.unavailable
         }
+        lock.lock()
+        defer { lock.unlock() }
+
         self.converter = converter
         self.analyzerFormat = analyzerFormat
-        self.continuation = continuation
+        for buffer in pending {
+            convert(buffer, with: converter, to: analyzerFormat)
+        }
+        pending = []
+        pendingFrames = 0
     }
 
     func receive(_ source: AVAudioPCMBuffer) {
         lock.lock()
         defer { lock.unlock() }
 
+        guard let converter, let analyzerFormat else {
+            hold(source)
+            return
+        }
+        convert(source, with: converter, to: analyzerFormat)
+    }
+
+    /// O engine pode reaproveitar o buffer do tap, então guarda-se uma cópia.
+    private func hold(_ source: AVAudioPCMBuffer) {
+        let limit = AVAudioFramePosition(Self.maxPendingSeconds * sourceFormat.sampleRate)
+        guard pendingFrames + AVAudioFramePosition(source.frameLength) <= limit,
+              let copy = AVAudioPCMBuffer(pcmFormat: source.format, frameCapacity: source.frameLength)
+        else { return }
+
+        copy.frameLength = source.frameLength
+        let sourceBuffers = UnsafeMutableAudioBufferListPointer(
+            UnsafeMutablePointer(mutating: source.audioBufferList)
+        )
+        let copyBuffers = UnsafeMutableAudioBufferListPointer(copy.mutableAudioBufferList)
+        for (from, to) in zip(sourceBuffers, copyBuffers) {
+            guard let src = from.mData, let dst = to.mData else { continue }
+            memcpy(dst, src, Int(min(from.mDataByteSize, to.mDataByteSize)))
+        }
+        pending.append(copy)
+        pendingFrames += AVAudioFramePosition(source.frameLength)
+    }
+
+    private func convert(
+        _ source: AVAudioPCMBuffer,
+        with converter: AVAudioConverter,
+        to analyzerFormat: AVAudioFormat
+    ) {
         let ratio = analyzerFormat.sampleRate / source.format.sampleRate
         let capacity = AVAudioFrameCount(ceil(Double(source.frameLength) * ratio)) + 1
         guard let converted = AVAudioPCMBuffer(
