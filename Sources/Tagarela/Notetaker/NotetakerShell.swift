@@ -6,7 +6,6 @@ struct NotetakerShell: View {
 
     @State private var selection: NavSection = .dictation
     @State private var settings = AppSettings()
-    @State private var island = IslandController()
     @State private var hotkey = GlobalHotkey(id: 1)
     @State private var gesture = DictationGesture()
     @State private var dictation = DictationSession()
@@ -41,20 +40,14 @@ struct NotetakerShell: View {
             gesture.onFinish = finishDictation
             dictation.onFinish = handleDictationOutcome
             dictation.onFailure = handleDictationFailure
-            // Parada na borda ela é o botão de começar a falar sem passar
-            // pelo app.
-            island.onActivate = toggleDictation
-            island.staysVisible = islandStaysVisible
         }
-        .onChange(of: islandStaysVisible) { _, stays in island.staysVisible = stays }
         .onChange(of: settings.hotkey) { _, _ in registerHotkeys() }
         .onChange(of: HotkeyCapture.shared.isCapturing) { _, isCapturing in
             isCapturing ? hotkey.unregister() : registerHotkeys()
         }
         .onChange(of: model.phase) { _, phase in
             guard case .failed = phase else { return }
-            island.isSessionActive = false
-            island.hide()
+            setRecording(false)
             meetingStartedAt = nil
         }
         .onReceive(NotificationCenter.default.publisher(for: .tagarelaNavigate)) { note in
@@ -120,22 +113,20 @@ struct NotetakerShell: View {
     }
 
     private func handleDictationFailure(_ message: String) {
-        island.isSessionActive = false
-        island.isProcessing = false
-        island.flashWarning(String(message.prefix(28)))
+        setRecording(false)
+        NotificationCenter.default.post(name: .tagarelaWarning, object: message)
         playFeedback(.warning)
     }
 
     private func handleDictationOutcome(_ outcome: DictationOutcome) {
-        island.isProcessing = false
+        // Sem campo de texto em foco não há onde colar: o texto vai pra área de
+        // transferência, e o som de aviso diz que ele não foi colado.
         if outcome.needsCopy {
-            island.showResult(outcome.text)
+            NSPasteboard.general.clearContents()
+            NSPasteboard.general.setString(outcome.text, forType: .string)
             playFeedback(.warning)
-        } else {
-            island.hide()
-            if !outcome.text.isEmpty {
-                playFeedback(.finish)
-            }
+        } else if !outcome.text.isEmpty {
+            playFeedback(.finish)
         }
     }
 
@@ -151,13 +142,8 @@ struct NotetakerShell: View {
         )
     }
 
-    /// O botão Falar e o clique na ilha entram por aqui; o gesto precisa saber
+    /// O botão Falar e o menu da barra entram por aqui; o gesto precisa saber
     /// para não achar que ainda está gravando no próximo toque da tecla.
-    /// A ilha só fica parada na tela se ela estiver ligada e a opção também.
-    private var islandStaysVisible: Bool {
-        settings.showIsland && settings.islandAlwaysVisible
-    }
-
     private func toggleDictation() {
         guard !model.phase.isRunning else { return }
         gesture.reset()
@@ -175,16 +161,17 @@ struct NotetakerShell: View {
             softenLanguage: settings.softenLanguage,
             expand: { snippets.expand($0) }
         )
-        island.isSessionActive = true
-        island.isVisible = settings.showIsland
+        setRecording(true)
         playFeedback(.start)
     }
 
     private func finishDictation() {
         dictation.finish()
-        island.isSessionActive = false
-        island.warning = nil
-        island.isProcessing = true
+        setRecording(false)
+    }
+
+    private func setRecording(_ isRecording: Bool) {
+        NotificationCenter.default.post(name: .tagarelaRecordingChanged, object: isRecording)
     }
 
     private func playFeedback(_ kind: Feedback.Kind) {
@@ -209,8 +196,7 @@ struct NotetakerShell: View {
             }
             meetingStartedAt = Date()
             elapsed = 0
-            island.isSessionActive = true
-            island.isVisible = settings.showIsland
+            setRecording(true)
         }
     }
 
@@ -221,8 +207,7 @@ struct NotetakerShell: View {
         let others = model.othersTranscript.trimmingCharacters(in: .whitespacesAndNewlines)
 
         model.stop()
-        island.isSessionActive = false
-        island.hide()
+        setRecording(false)
         meetingStartedAt = nil
         elapsed = 0
         guard !you.isEmpty || !others.isEmpty else { return }

@@ -56,8 +56,8 @@ final class DictationSession {
     var hasEditableTarget: Bool { targetIssue == nil }
 
     /// Entregue direto por callback, não por `onChange` no SwiftUI: com a
-    /// janela ocluída o body para de ser avaliado e a ilha ficava girando pra
-    /// sempre mesmo com o texto já colado.
+    /// janela ocluída o body para de ser avaliado e o indicador de gravação
+    /// ficava preso mesmo com o texto já colado.
     var onFinish: ((DictationOutcome) -> Void)?
     var onFailure: ((String) -> Void)?
 

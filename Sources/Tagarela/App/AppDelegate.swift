@@ -4,6 +4,10 @@ import SwiftUI
 extension Notification.Name {
     static let tagarelaNavigate = Notification.Name("TagarelaNavigate")
     static let tagarelaToggleDictation = Notification.Name("TagarelaToggleDictation")
+    /// `object` é um `Bool`: se o microfone está gravando (ditado ou reunião).
+    static let tagarelaRecordingChanged = Notification.Name("TagarelaRecordingChanged")
+    /// `object` é a `String` do aviso, mostrado por alguns segundos na barra de menus.
+    static let tagarelaWarning = Notification.Name("TagarelaWarning")
 }
 
 @MainActor
@@ -58,7 +62,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         }
 
         // Se o usuário fechar/encerrar pela Dock, apenas oculta a janela e retira da Dock,
-        // mantendo o ditado, a ilha e a barra de menus funcionando em background.
+        // mantendo o ditado e a barra de menus funcionando em background.
         hideMainWindowAndDock()
         return .terminateCancel
     }

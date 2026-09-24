@@ -169,29 +169,6 @@ struct SettingsView: View {
                             .labelsHidden()
                             .toggleStyle(.switch)
                     }
-
-                    Divider().overlay(Theme.border)
-
-                    SettingsRow(
-                        title: t("Mostrar ilha no topo da tela", "Show the island at the top of the screen"),
-                        subtitle: t("Indicador junto ao notch enquanto a reunião grava.", "Indicator next to the notch while recording.")
-                    ) {
-                        Toggle("", isOn: $settings.showIsland)
-                            .labelsHidden()
-                            .toggleStyle(.switch)
-                    }
-
-                    Divider().overlay(Theme.border)
-
-                    SettingsRow(
-                        title: t("Deixar a ilha sempre na tela", "Keep the island on screen"),
-                        subtitle: t("Parada ela fica na borda com um microfone: clicar começa a gravar. Arraste pra escolher a borda.", "At rest it sits on the edge with a microphone: click to start recording. Drag it to pick the edge.")
-                    ) {
-                        Toggle("", isOn: $settings.islandAlwaysVisible)
-                            .labelsHidden()
-                            .toggleStyle(.switch)
-                            .disabled(!settings.showIsland)
-                    }
                 }
 
                 SettingsGroup(t("Dock e Segundo Plano", "Dock & Background")) {
@@ -208,7 +185,7 @@ struct SettingsView: View {
 
                     SettingsRow(
                         title: t("Ocultar da Dock sempre", "Always hide from Dock"),
-                        subtitle: t("Executa discretamente apenas na barra de menus e no notch, sem ocupar a Dock.", "Runs quietly in the menu bar and notch without appearing in the Dock.")
+                        subtitle: t("Executa discretamente apenas na barra de menus, sem ocupar a Dock.", "Runs quietly in the menu bar without appearing in the Dock.")
                     ) {
                         Toggle("", isOn: $settings.alwaysHideFromDock)
                             .labelsHidden()
