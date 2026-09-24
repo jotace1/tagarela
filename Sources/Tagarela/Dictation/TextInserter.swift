@@ -13,7 +13,7 @@ enum TextInserter {
     }
 
     /// `target` é o app que estava na frente quando o ditado começou. Sem
-    /// devolver o foco a ele, o ⌘V cairia na janela do speech.md — que é o que
+    /// devolver o foco a ele, o ⌘V cairia na janela do Tagarela — que é o que
     /// acontece sempre que o ditado é iniciado pelo botão da interface.
     static func insert(_ text: String, into target: NSRunningApplication?) async {
         guard !text.isEmpty else { return }

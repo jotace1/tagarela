@@ -6,7 +6,7 @@ cd "$project_dir"
 
 version=$(plutil -extract CFBundleShortVersionString raw App/Info.plist)
 app_dir=$("$project_dir/scripts/bundle.sh" | tail -1)
-zip_path="$project_dir/dist/speech.md-$version.zip"
+zip_path="$project_dir/dist/tagarela-$version.zip"
 
 rm -f "$zip_path"
 ditto -c -k --keepParent "$app_dir" "$zip_path"

@@ -2,8 +2,8 @@ import AppKit
 import SwiftUI
 
 extension Notification.Name {
-    static let speechMDNavigate = Notification.Name("SpeechMDNavigate")
-    static let speechMDToggleDictation = Notification.Name("SpeechMDToggleDictation")
+    static let tagarelaNavigate = Notification.Name("TagarelaNavigate")
+    static let tagarelaToggleDictation = Notification.Name("TagarelaToggleDictation")
 }
 
 @MainActor

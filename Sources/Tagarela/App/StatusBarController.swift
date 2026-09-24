@@ -15,11 +15,11 @@ final class StatusBarController: NSObject, NSMenuDelegate {
     private func setupStatusItem() {
         let item = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
         if let button = item.button {
-            let image = NSImage(systemSymbolName: "waveform", accessibilityDescription: "speech.md")
-                ?? NSImage(systemSymbolName: "mic.fill", accessibilityDescription: "speech.md")
+            let image = NSImage(systemSymbolName: "waveform", accessibilityDescription: "Tagarela")
+                ?? NSImage(systemSymbolName: "mic.fill", accessibilityDescription: "Tagarela")
             image?.isTemplate = true
             button.image = image
-            button.toolTip = "speech.md - Ditado e Transcrição"
+            button.toolTip = "Tagarela - Ditado e Transcrição"
         }
 
         let menu = NSMenu()
@@ -32,7 +32,7 @@ final class StatusBarController: NSObject, NSMenuDelegate {
         menu.removeAllItems()
 
         // Cabeçalho
-        let titleItem = NSMenuItem(title: "speech.md", action: nil, keyEquivalent: "")
+        let titleItem = NSMenuItem(title: "Tagarela", action: nil, keyEquivalent: "")
         titleItem.isEnabled = false
         menu.addItem(titleItem)
 
@@ -40,7 +40,7 @@ final class StatusBarController: NSObject, NSMenuDelegate {
 
         // Abrir Janela Principal
         let openItem = NSMenuItem(
-            title: t("Abrir speech.md", "Open speech.md"),
+            title: t("Abrir Tagarela", "Open Tagarela"),
             action: #selector(openMainWindow),
             keyEquivalent: "o"
         )
@@ -82,7 +82,7 @@ final class StatusBarController: NSObject, NSMenuDelegate {
 
         // Encerrar definitivamente
         let quitItem = NSMenuItem(
-            title: t("Encerrar speech.md definitivamente", "Quit speech.md completely"),
+            title: t("Encerrar Tagarela definitivamente", "Quit Tagarela completely"),
             action: #selector(quitApp),
             keyEquivalent: "q"
         )
@@ -95,12 +95,12 @@ final class StatusBarController: NSObject, NSMenuDelegate {
     }
 
     @objc private func toggleDictation() {
-        NotificationCenter.default.post(name: .speechMDToggleDictation, object: nil)
+        NotificationCenter.default.post(name: .tagarelaToggleDictation, object: nil)
     }
 
     @objc private func openSettings() {
         appDelegate?.showMainWindow()
-        NotificationCenter.default.post(name: .speechMDNavigate, object: NavSection.settings)
+        NotificationCenter.default.post(name: .tagarelaNavigate, object: NavSection.settings)
     }
 
     @objc private func toggleAlwaysHideFromDock() {

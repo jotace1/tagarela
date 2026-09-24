@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="docs/icon.png" alt="speech.md" width="180">
+<img src="docs/icon.png" alt="Tagarela" width="180">
 
 <p>
   <img src="https://img.shields.io/badge/license-MIT-blue" alt="MIT">
@@ -12,7 +12,7 @@
 
 ---
 
-# 🎙️ speech.md
+# 🎙️ Tagarela
 
 **Voice transcription for macOS that runs entirely on your device.** No server, no
 account, no audio leaving your Mac. Transcribes at **75x real time**, and foreign
@@ -22,7 +22,10 @@ Built on `SpeechAnalyzer` and `SpeechTranscriber` (Apple Speech), with
 `ScreenCaptureKit` to capture what the other people in a call are saying, and
 Foundation Models for the optional refinement passes.
 
-*Pst. Free, and it stays free :)*
+Forked from [speech.md](https://github.com/Andsu-dev/speech.md) by
+[Anderson (Andsu-dev)](https://github.com/Andsu-dev) and remodeled from there:
+no ads, and the microphone opens on the key press so the first words are no
+longer lost while the model loads.
 
 ## What it does
 
@@ -88,17 +91,14 @@ targets for sustained use — first partial under 300 ms, sustained lag under
 
 ## Install
 
+Build from source and install into `/Applications`:
+
 ```sh
-brew install Andsu-dev/tap/speech-md
+./scripts/install.sh
 ```
 
-Or grab the `.dmg` from the [latest release](https://github.com/Andsu-dev/speech.md/releases/latest)
-and drag the app into Applications.
-
-The app is signed with a local certificate, not notarized by Apple. The cask
-clears the Gatekeeper quarantine flag on install, so it opens on the first
-click. From the dmg macOS blocks the first launch — right click the app and
-choose Open, or run `xattr -d com.apple.quarantine /Applications/speech.md.app`.
+The app is signed with a local certificate, not notarized by Apple — see
+[docs/signing.md](docs/signing.md).
 
 Runs on Apple Silicon, macOS 26 or later.
 
@@ -109,12 +109,10 @@ Xcode 26 or later.
 ```sh
 ./scripts/bundle.sh    # build the .app into dist/
 ./scripts/install.sh   # build and replace the installed app
-./scripts/release.sh   # build, publish the zip and the dmg to a GitHub Release
+./scripts/release.sh   # build and publish the zip to a GitHub Release
 ```
 
-`release.sh` prints the `version` and `sha256` to paste into the cask at
-[Andsu-dev/homebrew-tap](https://github.com/Andsu-dev/homebrew-tap). Signing is
-local — [docs/signing.md](docs/signing.md) explains why that matters for the
+Signing is local — [docs/signing.md](docs/signing.md) explains why that matters for the
 privacy permissions.
 
 ## Permissions
@@ -132,7 +130,7 @@ without that permission.
 ## Architecture
 
 ```
-Sources/SpeechMD/
+Sources/Tagarela/
 ├── App/          entry point
 ├── Speech/       SpeechPipeline, system audio capture
 ├── Dictation/    global dictation and text insertion
@@ -157,4 +155,5 @@ The interface is in Brazilian Portuguese.
 
 ## License
 
-MIT — see [LICENSE](LICENSE).
+MIT — see [LICENSE](LICENSE). The original speech.md copyright is kept there,
+as the license requires.

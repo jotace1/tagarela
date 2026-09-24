@@ -3,17 +3,17 @@
 import PackageDescription
 
 let package = Package(
-    name: "speech-md",
+    name: "tagarela",
     platforms: [
         .macOS(.v26)
     ],
     products: [
-        .executable(name: "speech-md", targets: ["SpeechMD"])
+        .executable(name: "tagarela", targets: ["Tagarela"])
     ],
     targets: [
         .executableTarget(
-            name: "SpeechMD",
-            path: "Sources/SpeechMD",
+            name: "Tagarela",
+            path: "Sources/Tagarela",
             linkerSettings: [
                 .linkedFramework("AVFoundation"),
                 .linkedFramework("Carbon"),

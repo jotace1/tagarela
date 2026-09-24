@@ -26,7 +26,7 @@ final class SystemAudioCapture: NSObject, SCStreamOutput, SCStreamDelegate, @unc
     static let channelCount: AVAudioChannelCount = 1
 
     private let audioQueue = DispatchQueue(
-        label: "dev.anderson.speech-md.system-audio",
+        label: "dev.jotace1.tagarela.system-audio",
         qos: .userInteractive
     )
     private let onAudio: @Sendable (CapturedAudioBuffer) -> Void

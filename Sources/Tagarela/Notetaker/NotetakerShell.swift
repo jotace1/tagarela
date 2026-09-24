@@ -57,12 +57,12 @@ struct NotetakerShell: View {
             island.hide()
             meetingStartedAt = nil
         }
-        .onReceive(NotificationCenter.default.publisher(for: .speechMDNavigate)) { note in
+        .onReceive(NotificationCenter.default.publisher(for: .tagarelaNavigate)) { note in
             if let target = note.object as? NavSection {
                 selection = target
             }
         }
-        .onReceive(NotificationCenter.default.publisher(for: .speechMDToggleDictation)) { _ in
+        .onReceive(NotificationCenter.default.publisher(for: .tagarelaToggleDictation)) { _ in
             toggleDictation()
         }
         .task(id: meetingStartedAt) {

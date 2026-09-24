@@ -197,7 +197,7 @@ struct SettingsView: View {
                 SettingsGroup(t("Dock e Segundo Plano", "Dock & Background")) {
                     SettingsRow(
                         title: t("Ocultar da Dock ao fechar janela", "Hide from Dock when window closes"),
-                        subtitle: t("Ao fechar a janela, o ícone sai da Dock mas o speech.md continua rodando em segundo plano.", "When the window is closed, the icon leaves the Dock while speech.md continues running in background.")
+                        subtitle: t("Ao fechar a janela, o ícone sai da Dock mas o Tagarela continua rodando em segundo plano.", "When the window is closed, the icon leaves the Dock while Tagarela continues running in background.")
                     ) {
                         Toggle("", isOn: $settings.hideFromDockWhenClosed)
                             .labelsHidden()
