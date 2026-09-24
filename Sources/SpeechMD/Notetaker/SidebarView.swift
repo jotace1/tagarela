@@ -5,7 +5,6 @@ struct SidebarView: View {
     @Binding var isCollapsed: Bool
 
     @Namespace private var selectionPill
-    @State private var stars: Int? = GitHubStars.cached
 
     private var width: CGFloat { isCollapsed ? 80 : 236 }
 
@@ -32,13 +31,6 @@ struct SidebarView: View {
 
             Spacer(minLength: 24)
 
-            if !isCollapsed {
-                ContyAd()
-                    .padding(.horizontal, 12)
-                    .padding(.bottom, 12)
-                    .transition(.opacity)
-            }
-
             VStack(spacing: 2) {
                 NavRow(
                     section: .settings,
@@ -51,11 +43,8 @@ struct SidebarView: View {
                     title: "GitHub",
                     icon: BrandIcon.github,
                     url: Links.repository,
-                    isCollapsed: isCollapsed,
-                    badge: stars.map(GitHubStars.format)
+                    isCollapsed: isCollapsed
                 )
-                .task { stars = await GitHubStars.fetch() ?? stars }
-                LinkRow(title: "@andersonbrdev", icon: BrandIcon.x, url: Links.profile, isCollapsed: isCollapsed)
             }
             .padding(.horizontal, isCollapsed ? 8 : 12)
             .padding(.bottom, 16)
@@ -206,29 +195,5 @@ private struct LinkRow: View {
         .onHover { isHovering = $0 }
         .animation(.snappy(duration: 0.25), value: badge)
         .help(isCollapsed ? title : "")
-    }
-}
-
-/// Contagem de estrelas do repo. Uma chamada por abertura; o último valor
-/// fica guardado pra o número já estar na tela antes da rede responder.
-enum GitHubStars {
-    private static let key = "githubStars"
-
-    static var cached: Int? {
-        UserDefaults.standard.object(forKey: key) as? Int
-    }
-
-    static func fetch() async -> Int? {
-        guard let (data, _) = try? await URLSession.shared.data(from: Links.repositoryAPI),
-              let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
-              let count = json["stargazers_count"] as? Int else { return nil }
-        UserDefaults.standard.set(count, forKey: key)
-        return count
-    }
-
-    static func format(_ count: Int) -> String {
-        count < 1000
-            ? "\(count)"
-            : String(format: "%.1fk", Double(count) / 1000).replacingOccurrences(of: ".0k", with: "k")
     }
 }

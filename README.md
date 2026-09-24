@@ -6,12 +6,6 @@
   <img src="https://img.shields.io/badge/license-MIT-blue" alt="MIT">
   <img src="https://img.shields.io/badge/platform-macOS%2026%2B-lightgrey?logo=apple" alt="macOS 26+">
   <img src="https://img.shields.io/badge/on--device-100%25-success" alt="100% on-device">
-  <a href="https://appconty.com"><img src="https://img.shields.io/badge/Visit-appconty.com-2984F6" alt="Visit appconty.com"></a>
-</p>
-
-<p>
-  <a href="https://x.com/andersonbrdev"><img src="https://img.shields.io/badge/FOLLOW%20ON%20X-000000?logo=x&logoColor=white" alt="Follow on X"></a>
-  <a href="https://appconty.com"><img src="https://img.shields.io/badge/POWERED%20BY%20CONTY-2984F6?logoColor=white" alt="Powered by Conty"></a>
 </p>
 
 </div>
@@ -29,8 +23,6 @@ Built on `SpeechAnalyzer` and `SpeechTranscriber` (Apple Speech), with
 Foundation Models for the optional refinement passes.
 
 *Pst. Free, and it stays free :)*
-
-<a href="https://github.com/Andsu-dev/speech.md"><img src="https://img.shields.io/github/stars/Andsu-dev/speech.md?style=social" alt="Star"></a>
 
 ## What it does
 
@@ -162,13 +154,6 @@ Personal project, work in progress. Meetings and dictations live in memory —
 closing the app discards them. Persistence is next.
 
 The interface is in Brazilian Portuguese.
-
-## Powered by Conty
-
-<a href="https://appconty.com"><img src="https://img.shields.io/badge/appconty.com-2984F6?logoColor=white" alt="Conty"></a>
-
-Save time, build faster, and find the right people to promote what you built.
-Build. Ship. Promote. All with [Conty](https://appconty.com).
 
 ## License
 
